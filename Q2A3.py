@@ -1,6 +1,7 @@
 import sqlite3
 import matplotlib.pyplot as plt
 import random
+import numpy as np
 import time
 
 connection = None
@@ -16,7 +17,8 @@ def multi_bar_chart(values1, values2, values3, labels, title):
     fig, ax = plt.subplots()
     ax.bar(labels, values1, width, label="Uninformed")
     ax.bar(labels, values2, width, label="Self-Optimized",  bottom=values1)
-    ax.bar(labels, values3, width, label="User-Optimized",  bottom=values2)
+    ax.bar(labels, values3, width, label="User-Optimized",
+           bottom=np.array(values2)+np.array(values1))
 
     # label x and y axis
     plt.xticks(range(len(labels)), labels)
@@ -101,12 +103,15 @@ def scenario2():
     cursor.execute('PRAGMA automatic_index = TRUE;')
     cursor.execute('''DROP TABLE Customers;''')
     cursor.execute('''ALTER TABLE CustomersOriginal RENAME TO Customers;''')
+    #cursor.execute('''DROP TABLE CustomersOriginal;''')
     cursor.execute('''DROP VIEW OrderSize;''')
     cursor.execute('''DROP TABLE Orders;''')
     cursor.execute('''ALTER TABLE OrdersOriginal RENAME TO Orders;''')
+    #cursor.execute('''DROP TABLE OrdersOriginal;''')
     cursor.execute('''DROP TABLE Order_items;''')
     cursor.execute(
         '''ALTER TABLE Order_itemsOriginal RENAME TO Order_items;''')
+    #cursor.execute('''DROP TABLE Order_itemsOriginal;''')
     connection.commit()
     return
 
@@ -115,7 +120,40 @@ def scenario2():
 def scenario3():
     global connection, cursor
     cursor.execute('PRAGMA automatic_index = FALSE;')
+    cursor.execute(
+        '''CREATE TABLE IF NOT EXISTS NewCustomers (customer_id TEXT, customer_postal_code INTEGER, PRIMARY KEY(customer_id));''')
+    cursor.execute(
+        '''INSERT INTO NewCustomers SELECT customer_id, customer_postal_code FROM Customers;''')
+    cursor.execute(
+        '''ALTER TABLE Customers RENAME TO CustomersOriginal;''')
+    cursor.execute(
+        '''ALTER TABLE NewCustomers RENAME TO Customers;''')
+
+    cursor.execute(
+        '''CREATE TABLE IF NOT EXISTS NewOrders(order_id TEXT, customer_id TEXT, PRIMARY KEY(order_id),
+	FOREIGN KEY(customer_id) REFERENCES Customers(customer_id));''')
+    cursor.execute(
+        '''INSERT INTO NewOrders SELECT order_id, customer_id FROM Orders;''')
+    cursor.execute(
+        '''ALTER TABLE Orders RENAME TO OrdersOriginal;''')
+    cursor.execute(
+        '''ALTER TABLE NewOrders RENAME TO Orders;''')
+
+    cursor.execute(
+        '''CREATE TABLE IF NOT EXISTS NewOrder_items(order_id TEXT,	order_item_id INTEGER, product_id TEXT,	seller_id TEXT, PRIMARY KEY(order_id,order_item_id,product_id,seller_id),
+	FOREIGN KEY(seller_id) REFERENCES Sellers(seller_id)
+	FOREIGN KEY(order_id) REFERENCES Orders(order_id));''')
+    cursor.execute(
+        '''INSERT INTO NewOrder_items SELECT order_id, order_item_id, product_id, seller_id FROM Order_items;''')
+    cursor.execute(
+        '''ALTER TABLE Order_items RENAME TO Order_itemsOriginal;''')
+    cursor.execute(
+        '''ALTER TABLE NewOrder_items RENAME TO Order_items;''')
+
+    # create indices
+    cursor.execute('CREATE INDEX OrderIdx1 On Orders (order_id,customer_id);')
     cursor.execute('CREATE INDEX Index1 On Orders (order_id,customer_id);')
+
     connection.commit()
     return
 
@@ -143,7 +181,7 @@ def main():
             # start counting execution time
             start_time = time.time()
             result = []
-            for x in range(5):
+            for x in range(50):
                 result.append(query())
 
             if i == 0:
