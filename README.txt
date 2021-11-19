@@ -18,6 +18,11 @@ For the A3Medium, the results are as expected, the uninformed scenario takes lon
 
 For the A3Large, the results are as expected, the uninformed scenario takes longer to read than the self optimized scenario. This is also because the self optimized will use primary keys as therefore it will run faster. Also the useroptimzed scenarios will run faster than the other two scenarios because the indexes are running on indexes that are specialized for that specific query.
 
+For the useroptimized I created the specific index based on the fact that I had to join the Orders and Customers table on 
+the customer id so I created an index based on this. Also in this case we will specifically be parsing through the database in the 
+customer id group. Also I created another index for postal code because we specifically want to take into consideration the group of 
+and serach through the postal code for the customers and then compare to the random postal code generated. 
+
 Query 2:
 
 As displayed in the graph, the uninformed case takes the longest for each database. Additionally, these values are extremely larger than the other scenarios making their trend hard to observe. Compared to scenario 1, the other scenarios have relatively similar runtimes (compared to each other for the same database). By reviewing the time values used for the Q2A3chart.png plot, we can better observe the expected trend:
