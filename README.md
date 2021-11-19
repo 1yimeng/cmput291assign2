@@ -23,6 +23,11 @@ because the self optimized will use primary keys as therefore it will run faster
 
 Query 2:
 
+As displayed in the graph, the uninformed case takes the longest for each database. Additionally, these values are extremely larger than the other scenarios making their trend hard to observe. Compared to scenario 1, the other scenarios have relatively similar runtimes (compared to each other for the same database). By reviewing the time values used for the Q2A3chart.png plot, we can better observe the expected trend:
+
+[71315.99450111389, 278797.4145412445, 2259579.808950424]
+[390.44976234436035, 1012.0851993560791, 3468.294620513916]
+[407.45091438293457, 982.8619956970215, 2062.3245239257812]
 
 
 Query 3:
