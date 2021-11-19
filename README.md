@@ -29,6 +29,8 @@ As displayed in the graph, the uninformed case takes the longest for each databa
 [390.44976234436035, 1012.0851993560791, 3468.294620513916]
 [407.45091438293457, 982.8619956970215, 2062.3245239257812]
 
+The numbers increase from left to right as we go from the smallDB to the largeDB. Also, 
+
 
 Query 3:
 For each of the 3 databases, the uninformed case always took the longest time to output. The self-optimized case somehow took the similar amount of time to output as the user-optimized case, but only slightly slower. Since user-optimized case chose to run on the optimal indexes.
