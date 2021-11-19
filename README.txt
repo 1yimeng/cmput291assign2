@@ -1,7 +1,7 @@
 README
 Readme for Assignment 3
 
-Names: Anushka Khare, Rachel Ellis, Elsa Xiaoyi , Yi Meng Wang
+Names: Anushka Khare, Rachel Ellis, Elsa Xiaoyi Chen, Yi Meng Wang
 CCIDs: anushka1, rjellis, xiaoyi9, yimeng2
 
 We have consulted matplotlib documentation for stacked bar chart.
