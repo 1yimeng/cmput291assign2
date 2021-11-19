@@ -39,6 +39,14 @@ For the self-optimized scenario, we created two indices:
 
 
 Query 3:
+
+For query 3, we executed the following query:
+    CREATE VIEW IF NOT EXISTS OrderSize AS SELECT O.order_id as oid, COUNT(order_item_id) as size
+	       FROM Orders as O, Order_items as I WHERE O.order_id = I.order_id GROUP BY O.order_id;
+    SELECT AVG(size) FROM Customers as C, Orders as O, OrderSize WHERE C.customer_postal_code = :P
+    AND C.customer_id = O.customer_id AND O.order_id = oid;
+
+
 For each of the 3 databases, the uninformed case always took the longest time to output. The self-optimized case somehow took the similar amount of time to output as the user-optimized case, but only slightly slower. Since user-optimized case chose to run on the optimal indexes.
 
 For query 3, I created the composite index on orders(order_id, customer_id), because both are the join column attributes in the query. Order_id is used to join table Orders and Order_items; customer_id joins table Customers and Orders.
