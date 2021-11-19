@@ -1,11 +1,3 @@
-#
-# yimeng2 lab 06 MA5.py
-# I declare that I did not collaborate with anyone in this micro-assignment. 
-# I used class and lab notes and StackOverflow to format the graph. 
-# https://stackoverflow.com/questions/1221108/barchart-with-vertical-labels-in-python-matplotlib
-# https://stackoverflow.com/questions/332289/how-do-you-change-the-size-of-figures-drawn-with-matplotlib 
-#
-
 import sqlite3
 import matplotlib.pyplot as plt
 import random

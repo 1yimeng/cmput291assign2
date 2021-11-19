@@ -22,11 +22,12 @@ def plotting(title, label1, values1, values2, values3):
         print('Warning: empty input so generated plot will be empty')
     width = 0.35
     fig, axis = plt.subplots()
+    bottoms = [a+b for a,b in zip(values1, values2)]
     axis.bar(label1, values1, width, label="Uninformed")
     axis.bar(label1, values2, width, label="Self-Optimized",
              bottom=values1)  # stack
     axis.bar(label1, values3, width, label="User-Optimized",
-             bottom=np.array(values2)+np.array(values1))
+             bottom=bottoms)
 
     # label x and y axis
     plt.xticks(range(len(label1)), label1)
