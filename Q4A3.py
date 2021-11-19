@@ -123,7 +123,6 @@ def db_user_optimized(path):
     global connection, cursor
     connect(path)
     # user_optimized()
-    uninformed()
     cursor.execute('CREATE INDEX Sellerid1 ON Sellers (seller_id)')
     cursor.execute('CREATE INDEX Sellerid ON Order_items (seller_id)')
     cursor.execute('CREATE INDEX orderid ON Order_items (order_id)')
