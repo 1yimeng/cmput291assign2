@@ -27,7 +27,6 @@ def multi_bar_chart(values1, values2, values3, labels, title):
     plt.title(title)
 
     # save plot to file
-    # we'll use passed title to give file name
     path = './Q2A3chart.png'
     plt.savefig(path)
     print('Chart saved to file {}'.format(path))
@@ -51,7 +50,7 @@ def query(postalCode):
 
     cursor.execute("""CREATE VIEW IF NOT EXISTS OrderSize AS SELECT O.order_id as oid, COUNT(order_item_id) as size
 	            FROM Orders as O, Order_items as I WHERE O.order_id = I.order_id GROUP BY O.order_id;""")
-    cursor.execute("""SELECT AVG(size) FROM Customers as C, Orders as O, OrderSize WHERE customer_postal_code = :P
+    cursor.execute("""SELECT AVG(size) FROM Customers as C, Orders as O, OrderSize WHERE C.customer_postal_code = :P
     AND C.customer_id = O.customer_id AND O.order_id = oid;""", {"P": postalCode})
     connection.commit()
     return
@@ -105,40 +104,9 @@ def scenario2():
 
 def scenario3():
     global connection, cursor
-    cursor.execute('PRAGMA automatic_index = FALSE;')
-    cursor.execute(
-        '''CREATE TABLE IF NOT EXISTS NewCustomers (customer_id TEXT, customer_postal_code INTEGER, PRIMARY KEY(customer_id));''')
-    cursor.execute(
-        '''INSERT INTO NewCustomers SELECT customer_id, customer_postal_code FROM Customers;''')
-    cursor.execute(
-        '''ALTER TABLE Customers RENAME TO CustomersOriginal;''')
-    cursor.execute(
-        '''ALTER TABLE NewCustomers RENAME TO Customers;''')
-
-    cursor.execute(
-        '''CREATE TABLE IF NOT EXISTS NewOrders(order_id TEXT, customer_id TEXT, PRIMARY KEY(order_id),
-	FOREIGN KEY(customer_id) REFERENCES Customers(customer_id));''')
-    cursor.execute(
-        '''INSERT INTO NewOrders SELECT order_id, customer_id FROM Orders;''')
-    cursor.execute(
-        '''ALTER TABLE Orders RENAME TO OrdersOriginal;''')
-    cursor.execute(
-        '''ALTER TABLE NewOrders RENAME TO Orders;''')
-
-    cursor.execute(
-        '''CREATE TABLE IF NOT EXISTS NewOrder_items(order_id TEXT,	order_item_id INTEGER, product_id TEXT,	seller_id TEXT, PRIMARY KEY(order_id,order_item_id,product_id,seller_id),
-	FOREIGN KEY(seller_id) REFERENCES Sellers(seller_id)
-	FOREIGN KEY(order_id) REFERENCES Orders(order_id));''')
-    cursor.execute(
-        '''INSERT INTO NewOrder_items SELECT order_id, order_item_id, product_id, seller_id FROM Order_items;''')
-    cursor.execute(
-        '''ALTER TABLE Order_items RENAME TO Order_itemsOriginal;''')
-    cursor.execute(
-        '''ALTER TABLE NewOrder_items RENAME TO Order_items;''')
-    # * scenario1()
 
     # create indices
-    cursor.execute('CREATE INDEX OrderIdx1 On Orders (order_id,customer_id);')
+    cursor.execute('CREATE INDEX OrderIdx1 On Orders (customer_id);')
     cursor.execute(
         'CREATE INDEX CustIdx1 On Customers (customer_postal_code);')
 
@@ -166,13 +134,14 @@ def main():
             else:
                 scenario3()
 
-            # start counting execution time
-            start_time = time.time()
             # get add postal codes and randomly select 50
             cursor.execute(
                 """SELECT DISTINCT(customer_postal_code) from Customers""")
             rows = cursor.fetchall()
             postal_codes = random.choices(rows, k=50)
+
+            # start counting execution time
+            start_time = time.time()
             for x in range(50):
                 query(postal_codes[x][0])
 
