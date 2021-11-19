@@ -31,7 +31,7 @@ As displayed in the graph, the uninformed case takes the longest for each databa
 The numbers increase from left to right as we go from the smallDB to the largeDB. Also, decrease from top to down as we go from scenario 1 to 3. 
 
 For the self-optimized scenario, we created two indices:
--  composite index on Customers (customer_id, customer_postal_code) because we use these attributes?
+-  index on Customers (customer_postal_code) because we use this to match our randomly selected postal code. This operation is faster when we have an index for this attribute to group similar ones together, avoiding a scan through the entire table.
 -  composite index on Orders (order_id,customer_id) since we are joining the Orders table to Customers and the View using those attributes. Note, from tests in DB Browser I confirmed that this is the correct order of the attributes (the other way around doesn't work). 
 
 
