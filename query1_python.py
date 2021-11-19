@@ -1,8 +1,9 @@
 import sqlite3
 import time
 from typing import Counter
-
-
+import matplotlib.pyplot as plt
+import random
+import numpy as np
 connection = None
 cursor = None
 
@@ -16,18 +17,54 @@ def connect(path):
     return
 
 
+def plotting(title, label1, values1, values2, values3):
+    if len(values1) < 1 or len(values2) < 1 or len(values3) < 1:
+        print('Warning: empty input so generated plot will be empty')
+    width = 0.35
+    fig, axis = plt.subplots()
+    bottoms = [a+b for a,b in zip(values1, values2)]
+    axis.bar(label1, values1, width, label="Uninformed")
+    axis.bar(label1, values2, width, label="Self-Optimized",
+             bottom=values1)  # stack
+    axis.bar(label1, values3, width, label="User-Optimized",
+             bottom=bottoms)
+
+    # label x and y axis
+    plt.xticks(range(len(label1)), label1)
+    plt.legend()
+
+    # give plot a title
+    plt.title(title)
+
+    # save plot to file
+    # we'll use passed title to give file name
+    path = './Q1A3chart.png'
+    plt.savefig(path)
+    print('Chart saved to file {}'.format(path))
+
+    # close figure so it doesn't display
+    plt.close()
+    return
+
+
 def uninformed():
     global connection, cursor
+    # turning off the autoindexing
     cursor.execute('PRAGMA automatic_index = FALSE;')
-    cursor.execute('''CREATE TABLE NewCustomers (customer_id TEXT, customer_postal_code INTEGER);
-    INSERT INTO NewCustomers SELECT customer_id, customer_postal_code FROM Customers;
-    ALTER TABLE Customers RENAME TO CustomersOld; 
-    ALTER TABLE NewCustomers RENAME TO Customers;
-    
-    CREATE TABLE NewOrders (order_id TEXT, customer_id TEXT);
-    INSERT INTO NewOrders SELECT order_id, customer_id FROM Orders;
-    ALTER TABLE Orders RENAME TO OrdersOriginal; 
-    ALTER TABLE NewOrders RENAME TO Orders;''')
+    # Customer Table
+    cursor.execute(
+        '''CREATE TABLE IF NOT EXISTS CustomersNew (customer_id TEXT, customer_postal_code INTEGER);''')
+    cursor.execute(
+        '''INSERT INTO CustomersNew SELECT customer_id, customer_postal_code FROM Customers;''')
+    cursor.execute('''ALTER TABLE Customers RENAME TO CustomersOld;''')
+    cursor.execute('''ALTER TABLE CustomersNew RENAME TO Customers;''')
+    # Order Table
+    cursor.execute(
+        '''CREATE TABLE IF NOT EXISTS OrdersNew (order_id TEXT, customer_id TEXT);''')
+    cursor.execute(
+        '''INSERT INTO OrdersNew SELECT order_id, customer_id FROM Orders;''')
+    cursor.execute('''ALTER TABLE Orders RENAME TO OrdersOld;''')
+    cursor.execute('''ALTER TABLE OrdersNew RENAME TO Orders;''')
     connection.commit()
     return
 
@@ -35,34 +72,56 @@ def uninformed():
 def selfoptimized():
     global connection, cursor
     cursor.execute('PRAGMA automatic_index = TRUE;')
-    cursor.execute('''DROP TABLE Customers;
-        ALTER TABLE CustomersOld RENAME TO Customers;  
-        DROP TABLE Orders;
-        ALTER TABLE OrdersOld RENAME TO Orders;''')
+    # Customers Table
+    cursor.execute('''DROP TABLE Customers;''')
+    cursor.execute('''ALTER TABLE CustomersOld RENAME TO Customers;''')
+    # Order Table
+    cursor.execute('''DROP TABLE Orders;''')
+    cursor.execute(''' ALTER TABLE OrdersOld RENAME TO Orders;''')
     connection.commit()
     return
 
 
 def useroptimized():
     # need to define a specifc primary keys
-    cursor.execute('CREATE INDEX Index1 ON Customers(customer_id)')
-    cursor.execute('CREATE INDEX Index1 ON Customers(customer_postal_code)')
+    cursor.execute('PRAGMA automatic_index = FALSE;')
+    # for Customer Table
+    cursor.execute(
+        '''CREATE TABLE IF NOT EXISTS CustomersNew (customer_id TEXT, customer_postal_code INTEGER);''')
+    cursor.execute(
+        '''INSERT INTO CustomersNew SELECT customer_id, customer_postal_code FROM Customers;''')
+    cursor.execute('''ALTER TABLE Customers RENAME TO CustomersOld;''')
+    cursor.execute('''ALTER TABLE CustomersNew RENAME TO Customers;''')
+
+    # for Order Table
+    cursor.execute(
+        '''CREATE TABLE IF NOT EXISTS OrdersNew (order_id TEXT, customer_id TEXT);''')
+    cursor.execute(
+        '''INSERT INTO  OrdersNew SELECT order_id, customer_id FROM Orders;''')
+    cursor.execute('''ALTER TABLE Orders RENAME TO OrdersOld;''')
+    cursor.execute('''ALTER TABLE OrdersNew RENAME TO Orders;''')
+
+    cursor.execute(
+        '''CREATE INDEX IF NOT EXISTS IndexNew ON Customers(customer_id)''')
+    cursor.execute(
+        'CREATE INDEX IF NOT EXISTS Index3 ON Customers(customer_postal_code)')
     return
 
 
 def query_data():
     global connection, cursor
+
     # inputting the query for the database
-    cursor.execute('''SELECT count(*)
-FROM Customers C, Orders O
-JOIN C.customer_id ON O.customer_id
-WHERE rand_postal_code = C.customer_postal_code ''',
-                   )
+    cursor.execute("""SELECT DISTINCT(customer_postal_code) from Customers""")
+    random_rows = cursor.fetchall()
+    rand_postal_code = random.choice(random_rows)
+    cursor.execute(
+        "SELECT COUNT(*) FROM Customers C JOIN Orders ON C.customer_id WHERE C.customer_postal_code = ?", (rand_postal_code))
     # getting all the outputs of the query
-    array_store = cursor.fetchall()
+    #array_store = cursor.fetchone()[0]
     connection.commit()
 
-    return array_store
+    return
 
 
 def main():
@@ -74,10 +133,10 @@ def main():
     times2 = []
     times3 = []
     for db in databases:
-        for i in range(3):
+        for i in range(1, 4):
             connect(db)
             print("Connection to the " + db + " database open.")
-            # setup appropriate scenario
+
             if i == 1:
                 uninformed()
             if i == 2:
@@ -89,24 +148,22 @@ def main():
             start_time = time.time()
             result = []
             for x in range(50):
-                result.append(query_data())
+                query_data()
 
             if i == 1:
-                times1.append((time.time() - start_time))
+                times1.append((time.time() - start_time)*1000)
             if i == 2:
-                times2.append((time.time() - start_time))
+                times2.append((time.time() - start_time)*1000)
             if i == 3:
-                times3.append((time.time() - start_time))
+                times3.append((time.time() - start_time)*1000)
 
             connection.close()
             print("Connection to the database closed.")
-    print(times1)
-    print(times2)
-    print(times3)
-    return
-
-    connection.commit()
-    connection.close()
+            print(times1)
+            print(times2)
+            print(times3)
+    plotting("Runtime for Query 1 in ms", [
+        "SmallDB", "MediumDB", "LargeDB"], times1, times2, times3)
     return
 
 
