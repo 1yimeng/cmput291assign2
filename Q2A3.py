@@ -1,7 +1,6 @@
 import sqlite3
 import matplotlib.pyplot as plt
 import random
-import numpy as np
 import time
 
 connection = None
@@ -18,10 +17,12 @@ def multi_bar_chart(values1, values2, values3, labels, title):
     ax.bar(labels, values1, width, label="Uninformed")
     ax.bar(labels, values2, width, label="Self-Optimized",  bottom=values1)
     ax.bar(labels, values3, width, label="User-Optimized",
-           bottom=np.array(values2)+np.array(values1))
+           bottom=[a+b for a, b in zip(values1, values2)])
 
-    # label x and y axis
+    # label x axis and use log scale for y axis
     plt.xticks(range(len(labels)), labels)
+    # plt.yscale('log')
+    # plt.semilogy(base=10)
     plt.legend()
 
     # give plot a title
@@ -47,24 +48,15 @@ def connect(path):
     return
 
 
-def query():
+def query(postalCode):
     global connection, cursor
-
-    # get add postal codes and randomly select one
-    cursor.execute("""SELECT DISTINCT(customer_postal_code) from Customers""")
-    rows = cursor.fetchall()
-    index = random.randint(0, len(rows)-1)
-    postalCode = rows[index][0]
 
     cursor.execute("""CREATE VIEW IF NOT EXISTS OrderSize AS SELECT O.order_id as oid, COUNT(order_item_id) as size
 	            FROM Orders as O, Order_items as I WHERE O.order_id = I.order_id GROUP BY O.order_id;""")
     cursor.execute("""SELECT AVG(size) FROM Customers as C, Orders as O, OrderSize WHERE customer_postal_code = :P
     AND C.customer_id = O.customer_id AND O.order_id = oid;""", {"P": postalCode})
-
-    # get result
-    result = cursor.fetchone()[0]
     connection.commit()
-    return result
+    return
 
 
 def scenario1():
@@ -103,20 +95,16 @@ def scenario2():
     cursor.execute('PRAGMA automatic_index = TRUE;')
     cursor.execute('''DROP TABLE Customers;''')
     cursor.execute('''ALTER TABLE CustomersOriginal RENAME TO Customers;''')
-    #cursor.execute('''DROP TABLE CustomersOriginal;''')
     cursor.execute('''DROP VIEW OrderSize;''')
     cursor.execute('''DROP TABLE Orders;''')
     cursor.execute('''ALTER TABLE OrdersOriginal RENAME TO Orders;''')
-    #cursor.execute('''DROP TABLE OrdersOriginal;''')
     cursor.execute('''DROP TABLE Order_items;''')
     cursor.execute(
         '''ALTER TABLE Order_itemsOriginal RENAME TO Order_items;''')
-    #cursor.execute('''DROP TABLE Order_itemsOriginal;''')
     connection.commit()
     return
 
 
-# TODO: implement 3rd scenario
 def scenario3():
     global connection, cursor
     cursor.execute('PRAGMA automatic_index = FALSE;')
@@ -149,10 +137,12 @@ def scenario3():
         '''ALTER TABLE Order_items RENAME TO Order_itemsOriginal;''')
     cursor.execute(
         '''ALTER TABLE NewOrder_items RENAME TO Order_items;''')
+    # * scenario1()
 
     # create indices
     cursor.execute('CREATE INDEX OrderIdx1 On Orders (order_id,customer_id);')
-    cursor.execute('CREATE INDEX Index1 On Orders (order_id,customer_id);')
+    cursor.execute(
+        'CREATE INDEX CustIdx1 On Customers (customer_id, customer_postal_code);')
 
     connection.commit()
     return
@@ -180,16 +170,21 @@ def main():
 
             # start counting execution time
             start_time = time.time()
-            result = []
+            # get add postal codes and randomly select 50
+            cursor.execute(
+                """SELECT DISTINCT(customer_postal_code) from Customers""")
+            rows = cursor.fetchall()
+            postal_codes = random.choices(rows, k=50)
             for x in range(50):
-                result.append(query())
+                query(postal_codes[x][0])
 
+            exTime = (time.time() - start_time) * 1000
             if i == 0:
-                times1.append((time.time() - start_time))
+                times1.append(exTime)
             elif i == 1:
-                times2.append((time.time() - start_time))
+                times2.append(exTime)
             else:
-                times3.append((time.time() - start_time))
+                times3.append(exTime)
 
             connection.close()
             print("Connection to the database closed.")
