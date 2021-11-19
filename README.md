@@ -1,8 +1,8 @@
 README
 Readme for Assignment 3
 
-Names: Anushka Khare, Rachel Ellis
-CCIDs: anushka1, rjellis
+Names: Anushka Khare, Rachel Ellis, Elsa Xiaoyi Chen
+CCIDs: anushka1, rjellis, xiaoyi9
 
 We declare that we did not collaborate with anyone in this assignment outside of our group
 
@@ -25,3 +25,4 @@ Query 2:
 
 
 
+Query 3:
