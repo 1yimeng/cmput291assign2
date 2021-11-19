@@ -19,10 +19,8 @@ def multi_bar_chart(values1, values2, values3, labels, title):
     ax.bar(labels, values3, width, label="User-Optimized",
            bottom=[a+b for a, b in zip(values1, values2)])
 
-    # label x axis and use log scale for y axis
+    # label x axis
     plt.xticks(range(len(labels)), labels)
-    # plt.yscale('log')
-    # plt.semilogy(base=10)
     plt.legend()
 
     # give plot a title
@@ -142,7 +140,7 @@ def scenario3():
     # create indices
     cursor.execute('CREATE INDEX OrderIdx1 On Orders (order_id,customer_id);')
     cursor.execute(
-        'CREATE INDEX CustIdx1 On Customers (customer_id, customer_postal_code);')
+        'CREATE INDEX CustIdx1 On Customers (customer_postal_code);')
 
     connection.commit()
     return
